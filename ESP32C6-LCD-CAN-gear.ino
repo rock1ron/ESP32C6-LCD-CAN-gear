@@ -30,11 +30,10 @@
 
 #define CAN_EspeedL_1000 0xA0
 #define CAN_EspeedH_1000 0x0F
-#define CAN_VspeedL_20 0xA0 // 20 km/h
-#define CAN_VspeedH_20 0x0F
-#define ChkSumOffset_0xAA  90  
-#define ChkSumOffset_0x1A0 116
-
+#define CAN_VspeedL_20 0xC2 // 20 km/h
+#define CAN_VspeedH_20 0x00
+#define ChkSumOffset_0xAA  85 
+#define ChkSumOffset_0x1A0 94
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
 // to each board and not reassignable. For Arduino Uno: MOSI = pin 11 and
@@ -60,12 +59,12 @@ void sendEspeedFrame(uint8_t Espeed) { // 20 ms
 	EspeedFrame.extd = 0;
 	EspeedFrame.data_length_code = 8;
 	EspeedFrame.data[0] = EChkSum;
-	EspeedFrame.data[1] = EMsgCtr;
-	EspeedFrame.data[2] = 0x00;
-	EspeedFrame.data[3] = 0x00;    
+	EspeedFrame.data[1] = 0x40+EMsgCtr;
+	EspeedFrame.data[2] = 0x1A;
+	EspeedFrame.data[3] = 0x5C;    
 	EspeedFrame.data[4] = CAN_EspeedL_1000;   
 	EspeedFrame.data[5] = CAN_EspeedH_1000;   
-	EspeedFrame.data[6] = 0x00;
+	EspeedFrame.data[6] = 0x94;
 	EspeedFrame.data[7] = 0x00;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(EspeedFrame);  // timeout defaults to 1 ms
@@ -77,12 +76,12 @@ void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
 	VspeedFrame.extd = 0;
 	VspeedFrame.data_length_code = 8;
 	VspeedFrame.data[0] = CAN_VspeedL_20;
-	VspeedFrame.data[1] = CAN_VspeedH_20;
+	VspeedFrame.data[1] = 0x80+CAN_VspeedH_20;
 	VspeedFrame.data[2] = 0x00;
 	VspeedFrame.data[3] = 0x00;    
-	VspeedFrame.data[4] = 0x00;   
+	VspeedFrame.data[4] = 0x80;   
 	VspeedFrame.data[5] = 0x00;   
-	VspeedFrame.data[6] = VMsgCtr;
+	VspeedFrame.data[6] = 0x50+VMsgCtr;
 	VspeedFrame.data[7] = VChkSum;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(VspeedFrame);  // timeout defaults to 1 ms
@@ -103,7 +102,7 @@ void setup(void) {
   
   tft.init(TFT_WIDTH, TFT_HEIGTH, SPI_MODE3);           // Init ST7789 172x320
   tft.setRotation(2); // 2 means USB connector points down
-  digitalWrite(TFT_BL,100); // Backlight intensity
+  digitalWrite(TFT_BL,1); // Backlight intensity
   tft.setSPISpeed(40000000); //Default is 40000000
   
   ESP32Can.setPins(CAN_TX, CAN_RX);
