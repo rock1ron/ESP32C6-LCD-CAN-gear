@@ -28,6 +28,13 @@
 #define TFT_WIDTH   172
 #define TFT_HEIGTH  320
 
+#define CAN_EspeedL_1000 0xA0
+#define CAN_EspeedH_1000 0x0F
+#define CAN_VspeedL_20 0xA0 // 20 km/h
+#define CAN_VspeedH_20 0x0F
+#define ChkSumOffset_0xAA  90  
+#define ChkSumOffset_0x1A0 116
+
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
 // to each board and not reassignable. For Arduino Uno: MOSI = pin 11 and
@@ -43,25 +50,43 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
+int EChkSum, VChkSum, EMsgCtr, VMsgCtr = 0;
+
 CanFrame rxFrame;
-void sendCANFrame(uint8_t obdId) {
-	CanFrame obdFrame = { 0 };
-	obdFrame.identifier = 0x650;
-	obdFrame.extd = 0;
-	obdFrame.data_length_code = 8;
-	obdFrame.data[0] = 2;
-	obdFrame.data[1] = 1;
-	obdFrame.data[2] = obdId;
-	obdFrame.data[3] = 0x00;    
-	obdFrame.data[4] = 0x00;   
-	obdFrame.data[5] = 0x00;   
-	obdFrame.data[6] = 0x00;
-	obdFrame.data[7] = 0x00;
+
+void sendEspeedFrame(uint8_t Espeed) { // 20 ms
+	CanFrame EspeedFrame = { 0 };
+	EspeedFrame.identifier = 0xAA;
+	EspeedFrame.extd = 0;
+	EspeedFrame.data_length_code = 8;
+	EspeedFrame.data[0] = EChkSum;
+	EspeedFrame.data[1] = EMsgCtr;
+	EspeedFrame.data[2] = 0x00;
+	EspeedFrame.data[3] = 0x00;    
+	EspeedFrame.data[4] = CAN_EspeedL_1000;   
+	EspeedFrame.data[5] = CAN_EspeedH_1000;   
+	EspeedFrame.data[6] = 0x00;
+	EspeedFrame.data[7] = 0x00;
     // Accepts both pointers and references 
-  ESP32Can.writeFrame(obdFrame);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(EspeedFrame);  // timeout defaults to 1 ms
 }
 
-float p = 3.1415926;
+void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
+	CanFrame VspeedFrame = { 0 };
+	VspeedFrame.identifier = 0x1A0;
+	VspeedFrame.extd = 0;
+	VspeedFrame.data_length_code = 8;
+	VspeedFrame.data[0] = CAN_VspeedL_20;
+	VspeedFrame.data[1] = CAN_VspeedH_20;
+	VspeedFrame.data[2] = 0x00;
+	VspeedFrame.data[3] = 0x00;    
+	VspeedFrame.data[4] = 0x00;   
+	VspeedFrame.data[5] = 0x00;   
+	VspeedFrame.data[6] = VMsgCtr;
+	VspeedFrame.data[7] = VChkSum;
+    // Accepts both pointers and references 
+  ESP32Can.writeFrame(VspeedFrame);  // timeout defaults to 1 ms
+}
 
 void setup(void) {
   pinMode(SOLENOID_A, INPUT);   
@@ -96,49 +121,40 @@ void setup(void) {
    
   Serial.println(F("Initialized"));
 
-  /*
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setTextSize(4);
-  tft.fillScreen(ST77XX_BLUE);
-  tft.setCursor(50, 100);
-  tft.print(1);
-  delay(200);
-  tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
-  tft.setCursor(50, 100);
-  tft.print(2);
-  delay(200);
-  tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
-  tft.setCursor(50, 100);
-  tft.print(3);
-  delay(200);
-  tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
-  tft.setCursor(50, 100);
-  tft.print(4);
-  Serial.println("Setup done");
-  */
-
 }
 
 void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
-  static uint32_t lastStamp = 0;
+  static uint32_t ElastStamp, VlastStamp = 0;
   uint32_t currentStamp = millis();
   
-  if(currentStamp - lastStamp > 100) {   // sends frame every 100 ms
-      lastStamp = currentStamp;
-      sendCANFrame(5);
-      Serial.printf("CAN TX \r\n");
+  
+  if(currentStamp - ElastStamp > 20) {   // sends frame every 100 ms
+      if (EMsgCtr < 14) EMsgCtr++; else EMsgCtr = 0;
+      EChkSum = EMsgCtr + ChkSumOffset_0xAA;
+      ElastStamp = currentStamp;
+      sendEspeedFrame(EMsgCtr);
+      Serial.print(ElastStamp);
+      Serial.print(" E \n\r");
   }
-
-  // You can set custom timeout, default is 1000
-  if(ESP32Can.readFrame(rxFrame, 100)) {
+  if(currentStamp - VlastStamp > 160) {   // sends frame every 100 ms
+      if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
+      VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
+      VlastStamp = currentStamp;
+      sendVspeedFrame(VMsgCtr);
+      Serial.print(VlastStamp);
+      Serial.print(" V \n\r");
+  }
+  /*
+  if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
-      if(rxFrame.identifier == 0x1A0) {   // Standard OBD2 frame response ID
+      if(rxFrame.identifier == 0x1A0) {   // 
           Serial.printf("V-spd: %3dkm/h \r\n", rxFrame.data[0]); 
       }
   }
-
+  */
+/*
   gear = (digitalRead(SOLENOID_A) + (digitalRead(SOLENOID_B) * 2));
   lockup = (digitalRead(TCC));
   if (gear != lastgear) {
@@ -154,7 +170,7 @@ if (lockup != lastlockup) {
     if (lockup) tft.print("L");
     else tft.print("U");
     }
-
+*/
 }
 
 
