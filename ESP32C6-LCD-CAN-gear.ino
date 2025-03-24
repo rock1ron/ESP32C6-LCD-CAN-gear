@@ -92,7 +92,8 @@ void setup(void) {
   }  
 
   tft.fillScreen(ST77XX_BLUE);
- 
+  tft.setTextSize(4);
+   
   Serial.println(F("Initialized"));
 
   /*
@@ -134,7 +135,7 @@ void loop() {
   if(ESP32Can.readFrame(rxFrame, 100)) {
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
       if(rxFrame.identifier == 0x1A0) {   // Standard OBD2 frame response ID
-          Serial.printf("V-spd: %3d°C \r\n", rxFrame.data[0]); 
+          Serial.printf("V-spd: %3dkm/h \r\n", rxFrame.data[0]); 
       }
   }
 
@@ -142,15 +143,16 @@ void loop() {
   lockup = (digitalRead(TCC));
   if (gear != lastgear) {
     lastgear = gear;
-    tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
+    tft.fillRect(50, 100, 40, 50, ST77XX_BLUE);
     tft.setCursor(50, 100);
     tft.print(gear+1);
     }
 if (lockup != lastlockup) {
     lastlockup = lockup;
-    tft.fillRect(50, 200, 30, 40, ST77XX_BLUE);
-    tft.setCursor(50, 200);
-    tft.print(lockup+1);
+    tft.fillRect(100, 100, 40, 50, ST77XX_BLUE);
+    tft.setCursor(100, 100);
+    if (lockup) tft.print("L");
+    else tft.print("U");
     }
 
 }
