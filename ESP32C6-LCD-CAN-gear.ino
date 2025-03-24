@@ -75,14 +75,10 @@ void setup(void) {
 
 //  SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI);
   Serial.begin(115200);
-  delay(1000);
-
+  
   tft.init(TFT_WIDTH, TFT_HEIGTH, SPI_MODE3);           // Init ST7789 172x320
   tft.setRotation(2); // 2 means USB connector points down
   digitalWrite(TFT_BL,100); // Backlight intensity
-  // SPI speed defaults to SPI_DEFAULT_FREQ defined in the library, you can override it here
-  // Note that speed allowable depends on chip and quality of wiring, if you go too fast, you
-  // may end up with a black screen some times, or all the time.
   tft.setSPISpeed(40000000); //Default is 40000000
   
   ESP32Can.setPins(CAN_TX, CAN_RX);
@@ -95,8 +91,11 @@ void setup(void) {
       Serial.println("CAN bus failed!");
   }  
 
+  tft.fillScreen(ST77XX_BLUE);
+ 
   Serial.println(F("Initialized"));
 
+  /*
   tft.setTextColor(ST77XX_WHITE);
   tft.setTextSize(4);
   tft.fillScreen(ST77XX_BLUE);
@@ -115,15 +114,17 @@ void setup(void) {
   tft.setCursor(50, 100);
   tft.print(4);
   Serial.println("Setup done");
+  */
 
 }
 
 void loop() {
+  static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
   static uint32_t lastStamp = 0;
   uint32_t currentStamp = millis();
   
-  if(currentStamp - lastStamp > 100) {   // sends OBD2 request every 100 ms
+  if(currentStamp - lastStamp > 100) {   // sends frame every 100 ms
       lastStamp = currentStamp;
       sendCANFrame(5);
       Serial.printf("CAN TX\r");
@@ -131,76 +132,30 @@ void loop() {
 
   // You can set custom timeout, default is 1000
   if(ESP32Can.readFrame(rxFrame, 100)) {
-      // Comment out if too many requests 
-      Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
-      if(rxFrame.identifier == 0x7E8) {   // Standard OBD2 frame responce ID
-          Serial.printf("Coolant temp: %3d°C \r\n", rxFrame.data[3] - 40); // Convert to °C
+       //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
+      if(rxFrame.identifier == 0x1A0) {   // Standard OBD2 frame response ID
+          Serial.printf("V-spd: %3d°C \r\n", rxFrame.data[0]); 
       }
   }
+
   gear = (digitalRead(SOLENOID_A) + (digitalRead(SOLENOID_B) * 2));
   lockup = (digitalRead(TCC));
-  if (!digitalRead(BOOT_PIN)) tft.invertDisplay(false);
-  else tft.invertDisplay(true);
-  tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
-  tft.setCursor(50, 100);
-  tft.print(gear+1);
-  // Serial.println("Loop");
-}
-
-
-void testdrawtext(char *text, uint16_t color) {
-  tft.setCursor(0, 0);
-  tft.setTextColor(color);
-  tft.setTextWrap(true);
-  tft.print(text);
-}
-
-void testfastlines(uint16_t color1, uint16_t color2) {
-  tft.fillScreen(ST77XX_BLACK);
-  for (int16_t y=0; y < tft.height(); y+=5) {
-    tft.drawFastHLine(0, y, tft.width(), color1);
-  }
-  for (int16_t x=0; x < tft.width(); x+=5) {
-    tft.drawFastVLine(x, 0, tft.height(), color2);
-  }
-}
-
-void testdrawrects(uint16_t color) {
-  tft.fillScreen(ST77XX_BLACK);
-  for (int16_t x=0; x < tft.width(); x+=6) {
-    tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color);
-  }
-}
-
-void testfillrects(uint16_t color1, uint16_t color2) {
-  tft.fillScreen(ST77XX_BLACK);
-  for (int16_t x=tft.width()-1; x > 6; x-=6) {
-    tft.fillRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color1);
-    tft.drawRect(tft.width()/2 -x/2, tft.height()/2 -x/2 , x, x, color2);
-  }
-}
-
-void testroundrects() {
-  tft.fillScreen(ST77XX_BLACK);
-  uint16_t color = 100;
-  int i;
-  int t;
-  for(t = 0 ; t <= 4; t+=1) {
-    int x = 0;
-    int y = 0;
-    int w = tft.width()-2;
-    int h = tft.height()-2;
-    for(i = 0 ; i <= 16; i+=1) {
-      tft.drawRoundRect(x, y, w, h, 5, color);
-      x+=2;
-      y+=3;
-      w-=4;
-      h-=6;
-      color+=1100;
+  if (gear != lastgear) {
+    lastgear = gear;
+    tft.fillRect(50, 100, 30, 40, ST77XX_BLUE);
+    tft.setCursor(50, 100);
+    tft.print(gear+1);
     }
-    color+=100;
-  }
+if (lockup != lastlockup) {
+    lastlockup = lockup;
+    tft.fillRect(50, 200, 30, 40, ST77XX_BLUE);
+    tft.setCursor(50, 200);
+    tft.print(lockup+1);
+    }
+
 }
+
+
 
 
 
