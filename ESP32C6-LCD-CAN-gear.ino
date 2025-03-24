@@ -128,7 +128,7 @@ void loop() {
   if(currentStamp - lastStamp > 100) {   // sends frame every 100 ms
       lastStamp = currentStamp;
       sendCANFrame(5);
-      Serial.printf("CAN TX\r");
+      Serial.printf("CAN TX \r\n");
   }
 
   // You can set custom timeout, default is 1000
