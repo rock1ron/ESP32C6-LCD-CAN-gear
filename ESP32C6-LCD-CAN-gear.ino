@@ -50,7 +50,7 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-int EChkSum, VChkSum, SChkSum, EMsgCtr, VMsgCtr, SMsgCtr = 0;
+int EChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, CMsgCtr, VMsgCtr, SMsgCtr = 0;
 
 CanFrame rxFrame;
 
@@ -69,6 +69,20 @@ void sendEspeedFrame(uint8_t Espeed) { // 20 ms
 	EspeedFrame.data[7] = 0x00;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(EspeedFrame);  // timeout defaults to 1 ms
+}
+
+void sendCASFrame(uint8_t CAS) { // 20 ms
+	CanFrame CASFrame = { 0 };
+	CASFrame.identifier = 0x130;
+	CASFrame.extd = 0;
+	CASFrame.data_length_code = 8;
+	CASFrame.data[0] = 0x41;
+	CASFrame.data[1] = 0x43;
+	CASFrame.data[2] = 0x29;
+	CASFrame.data[3] = 0x0F;    
+	CASFrame.data[4] = CChkSum; // H nibble is counter and L nibble is checksum
+	    // Accepts both pointers and references 
+  ESP32Can.writeFrame(CASFrame);  // timeout defaults to 1 ms
 }
 
 void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
@@ -140,11 +154,11 @@ void setup(void) {
 void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
-  static uint32_t ElastStamp, VlastStamp, SlastStamp = 0;
+  static uint32_t ElastStamp, ClastStamp, VlastStamp, SlastStamp = 0;
   uint32_t currentStamp = millis();
   
   
-  if(currentStamp - ElastStamp > 20) {   // sends frame every 100 ms
+  if(currentStamp - ElastStamp > 20) {   // sends frame every 20 ms
       if (EMsgCtr < 14) EMsgCtr++; else EMsgCtr = 0;
       // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
       EChkSum = EMsgCtr + 0xF5; // Test with precalculated value
@@ -152,8 +166,17 @@ void loop() {
       sendEspeedFrame(EMsgCtr);
       Serial.print(ElastStamp);
       Serial.print(" E \n\r");
+  }    
+  if(currentStamp - ClastStamp > 100) {   // sends frame every 100 ms
+      if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
+      // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
+      CChkSum = (CMsgCtr * 16) + 0x01; // Test with precalculated value
+      ClastStamp = currentStamp;
+      sendEspeedFrame(CMsgCtr);
+      Serial.print(ClastStamp);
+      Serial.print(" C \n\r");
   }
-  if(currentStamp - VlastStamp > 160) {   // sends frame every 100 ms
+  if(currentStamp - VlastStamp > 160) {   // sends frame every 160 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
       // VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
       VChkSum = VMsgCtr + 0xF2;  // Test with precalculated value
@@ -162,7 +185,7 @@ void loop() {
       Serial.print(VlastStamp);
       Serial.print(" V \n\r");
   }
-  if(currentStamp - SlastStamp > 200) {   // sends frame every 100 ms
+  if(currentStamp - SlastStamp > 200) {   // sends frame every 200 ms
       if (SMsgCtr < 14) SMsgCtr++; else SMsgCtr = 0;
       // SChkSum = SMsgCtr + ChkSumOffset_0xC8;
       SChkSum = SMsgCtr + 0x50;  // Test with precalculated value
