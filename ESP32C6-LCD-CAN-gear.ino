@@ -34,6 +34,7 @@
 #define CAN_VspeedH_20 0x00
 #define ChkSumOffset_0xAA  85 
 #define ChkSumOffset_0x1A0 94
+#define ChkSumOffset_0xC8 108
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
 // to each board and not reassignable. For Arduino Uno: MOSI = pin 11 and
@@ -49,7 +50,7 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-int EChkSum, VChkSum, EMsgCtr, VMsgCtr = 0;
+int EChkSum, VChkSum, SChkSum, EMsgCtr, VMsgCtr, SMsgCtr = 0;
 
 CanFrame rxFrame;
 
@@ -87,6 +88,20 @@ void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
   ESP32Can.writeFrame(VspeedFrame);  // timeout defaults to 1 ms
 }
 
+void sendSteerAngFrame(uint8_t SteerAng) { // 200 ms
+	CanFrame SteerAngFrame = { 0 };
+	SteerAngFrame.identifier = 0xC8;
+	SteerAngFrame.extd = 0;
+	SteerAngFrame.data_length_code = 6;
+	SteerAngFrame.data[0] = 0xBA;
+	SteerAngFrame.data[1] = 0x02;
+	SteerAngFrame.data[2] = SMsgCtr;
+	SteerAngFrame.data[3] = 0x00;    
+	SteerAngFrame.data[4] = 0x00;   
+	SteerAngFrame.data[5] = SChkSum;   
+	  // Accepts both pointers and references 
+  ESP32Can.writeFrame(SteerAngFrame);  // timeout defaults to 1 ms
+}
 void setup(void) {
   pinMode(SOLENOID_A, INPUT);   
   pinMode(SOLENOID_B, INPUT);   
@@ -125,13 +140,14 @@ void setup(void) {
 void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
-  static uint32_t ElastStamp, VlastStamp = 0;
+  static uint32_t ElastStamp, VlastStamp, SlastStamp = 0;
   uint32_t currentStamp = millis();
   
   
   if(currentStamp - ElastStamp > 20) {   // sends frame every 100 ms
       if (EMsgCtr < 14) EMsgCtr++; else EMsgCtr = 0;
-      EChkSum = EMsgCtr + ChkSumOffset_0xAA;
+      // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
+      EChkSum = EMsgCtr + 0xF5; // Test with precalculated value
       ElastStamp = currentStamp;
       sendEspeedFrame(EMsgCtr);
       Serial.print(ElastStamp);
@@ -139,11 +155,21 @@ void loop() {
   }
   if(currentStamp - VlastStamp > 160) {   // sends frame every 100 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
-      VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
+      // VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
+      VChkSum = VMsgCtr + 0xF2;  // Test with precalculated value
       VlastStamp = currentStamp;
       sendVspeedFrame(VMsgCtr);
       Serial.print(VlastStamp);
       Serial.print(" V \n\r");
+  }
+  if(currentStamp - SlastStamp > 200) {   // sends frame every 100 ms
+      if (SMsgCtr < 14) SMsgCtr++; else SMsgCtr = 0;
+      // SChkSum = SMsgCtr + ChkSumOffset_0xC8;
+      SChkSum = SMsgCtr + 0x50;  // Test with precalculated value
+      SlastStamp = currentStamp;
+      sendVspeedFrame(SMsgCtr);
+      Serial.print(SlastStamp);
+      Serial.print(" S \n\r");
   }
   /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
