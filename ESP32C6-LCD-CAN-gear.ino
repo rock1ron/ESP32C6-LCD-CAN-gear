@@ -172,7 +172,7 @@ void loop() {
       // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
       CChkSum = (CMsgCtr * 16) + 0x01; // Test with precalculated value
       ClastStamp = currentStamp;
-      sendEspeedFrame(CMsgCtr);
+      sendCASFrame(CMsgCtr);
       Serial.print(ClastStamp);
       Serial.print(" C \n\r");
   }
