@@ -33,6 +33,7 @@
 #define CAN_VspeedL_20 0xC2 // 20 km/h
 #define CAN_VspeedH_20 0x00
 #define ChkSumOffset_0xAA  85 
+#define ChkSumOffset_0x130  1 //?
 #define ChkSumOffset_0x1A0 94
 #define ChkSumOffset_0xC8 108
 
@@ -158,42 +159,44 @@ void loop() {
   uint32_t currentStamp = millis();
   
   
-  if(currentStamp - ElastStamp > 20) {   // sends frame every 20 ms
+  if(currentStamp - ElastStamp > 19) {   // sends frame every 20 ms
       if (EMsgCtr < 14) EMsgCtr++; else EMsgCtr = 0;
       // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
-      EChkSum = EMsgCtr + 0xF5; // Test with precalculated value
+      EChkSum = EMsgCtr + 0xF5; // Test with precalculated values
       ElastStamp = currentStamp;
       sendEspeedFrame(EMsgCtr);
       Serial.print(ElastStamp);
       Serial.print(" E \n\r");
   }    
-  if(currentStamp - ClastStamp > 100) {   // sends frame every 100 ms
+  if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
       // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
-      CChkSum = (CMsgCtr * 16) + 0x01; // Test with precalculated value
+      CChkSum = (CMsgCtr * 16) + 0x01; // Test with precalculated values
       ClastStamp = currentStamp;
       sendCASFrame(CMsgCtr);
       Serial.print(ClastStamp);
       Serial.print(" C \n\r");
   }
-  if(currentStamp - VlastStamp > 160) {   // sends frame every 160 ms
+  if(currentStamp - VlastStamp > 159) {   // sends frame every 160 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
       // VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
-      VChkSum = VMsgCtr + 0xF2;  // Test with precalculated value
+      VChkSum = VMsgCtr + 0xF2;  // Test with precalculated values
       VlastStamp = currentStamp;
       sendVspeedFrame(VMsgCtr);
       Serial.print(VlastStamp);
       Serial.print(" V \n\r");
   }
-  if(currentStamp - SlastStamp > 200) {   // sends frame every 200 ms
+  /*
+  if(currentStamp - SlastStamp > 199) {   // sends frame every 200 ms
       if (SMsgCtr < 14) SMsgCtr++; else SMsgCtr = 0;
       // SChkSum = SMsgCtr + ChkSumOffset_0xC8;
-      SChkSum = SMsgCtr + 0x50;  // Test with precalculated value
+      SChkSum = SMsgCtr + 0x50;  // Test with precalculated values
       SlastStamp = currentStamp;
-      sendVspeedFrame(SMsgCtr);
+      sendSteerAngFrame(SMsgCtr);
       Serial.print(SlastStamp);
       Serial.print(" S \n\r");
   }
+  */
   /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
