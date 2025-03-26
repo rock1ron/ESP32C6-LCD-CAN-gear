@@ -170,8 +170,7 @@ void loop() {
   }    
   if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
-      // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
-      CChkSum = CMsgCtr + 0xB5; // Test with precalculated values
+      CChkSum = (CMsgCtr * 0x10) + (CMsgCtr + 0xB5) % 0x10; // Test with precalculated values
       ClastStamp = currentStamp;
       sendCASFrame(CMsgCtr);
       Serial.print(ClastStamp);
