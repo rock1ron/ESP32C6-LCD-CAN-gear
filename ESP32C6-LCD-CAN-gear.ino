@@ -186,7 +186,7 @@ void loop() {
       Serial.print(VlastStamp);
       Serial.print(" V \n\r");
   }
-  /*
+  
   if(currentStamp - SlastStamp > 199) {   // sends frame every 200 ms
       if (SMsgCtr < 14) SMsgCtr++; else SMsgCtr = 0;
       // SChkSum = SMsgCtr + ChkSumOffset_0xC8;
@@ -196,7 +196,7 @@ void loop() {
       Serial.print(SlastStamp);
       Serial.print(" S \n\r");
   }
-  */
+  
   /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
