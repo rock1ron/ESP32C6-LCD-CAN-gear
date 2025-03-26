@@ -76,7 +76,7 @@ void sendCASFrame(uint8_t CAS) { // 20 ms
 	CanFrame CASFrame = { 0 };
 	CASFrame.identifier = 0x130;
 	CASFrame.extd = 0;
-	CASFrame.data_length_code = 8;
+	CASFrame.data_length_code = 5;
 	CASFrame.data[0] = 0x41;
 	CASFrame.data[1] = 0x43;
 	CASFrame.data[2] = 0x29;
@@ -171,7 +171,7 @@ void loop() {
   if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
       // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
-      CChkSum = (CMsgCtr * 16) + 0x01; // Test with precalculated values
+      CChkSum = CMsgCtr + 0xB5; // Test with precalculated values
       ClastStamp = currentStamp;
       sendCASFrame(CMsgCtr);
       Serial.print(ClastStamp);
