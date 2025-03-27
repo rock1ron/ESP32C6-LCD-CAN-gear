@@ -61,7 +61,7 @@ void sendEspeedFrame(uint8_t Espeed) { // 20 ms
 	EspeedFrame.extd = 0;
 	EspeedFrame.data_length_code = 8;
 	EspeedFrame.data[0] = EChkSum;
-	EspeedFrame.data[1] = 0x40+EMsgCtr;
+	EspeedFrame.data[1] = 0x40 + EMsgCtr;
 	EspeedFrame.data[2] = 0x1A;
 	EspeedFrame.data[3] = 0x5C;    
 	EspeedFrame.data[4] = CAN_EspeedL_1000;   
@@ -77,16 +77,15 @@ void sendE2Frame(uint8_t E2) { // 20 ms
 	E2Frame.identifier = 0x1D0;
 	E2Frame.extd = 0;
 	E2Frame.data_length_code = 8;
-	E2Frame.data[0] = 0x7C;
-	E2Frame.data[1] = 0xFF;
-	E2Frame.data[2] = 0x40 + E2MsgCtr;
-	E2Frame.data[3] = 0xB1;    
-	E2Frame.data[4] = 0x2D;   
-	E2Frame.data[5] = 0xB6;   
-	E2Frame.data[6] = 0xCC;
-	E2Frame.data[7] = 0xA6
-  ;
-    // Accepts both pointers and references 
+	E2Frame.data[0] = 0x80;
+	E2Frame.data[1] = 0x80;
+	E2Frame.data[2] = 0x60 + E2MsgCtr;
+	E2Frame.data[3] = 0xD0;    
+	E2Frame.data[4] = 0xCE;   
+	E2Frame.data[5] = 0x3A;   
+	E2Frame.data[6] = 0x0D;
+	E2Frame.data[7] = 0x91;
+      // Accepts both pointers and references 
   ESP32Can.writeFrame(E2Frame);  // timeout defaults to 1 ms
 }
 
@@ -115,7 +114,7 @@ void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
 	VspeedFrame.data[3] = 0x00;    
 	VspeedFrame.data[4] = 0x80;   
 	VspeedFrame.data[5] = 0x00;   
-	VspeedFrame.data[6] = 0x50+VMsgCtr;
+	VspeedFrame.data[6] = (VMsgCtr * 0x10) + 0x08;
 	VspeedFrame.data[7] = VChkSum;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(VspeedFrame);  // timeout defaults to 1 ms
@@ -205,7 +204,7 @@ void loop() {
   if(currentStamp - VlastStamp > 159) {   // sends frame every 160 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
       // VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
-      VChkSum = VMsgCtr + 0xF2;  // Test with precalculated values
+      VChkSum = (VMsgCtr + 0xAA) % 0x100;  // Test with precalculated values
       VlastStamp = currentStamp;
       sendVspeedFrame(VMsgCtr);
       Serial.print(VlastStamp);
