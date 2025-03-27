@@ -55,69 +55,69 @@ int EChkSum, E2ChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, E2MsgCtr, CMsgCtr, VM
 
 CanFrame rxFrame;
 
-void sendEspeedFrame(uint8_t Espeed) { // 20 ms
-	CanFrame EspeedFrame = { 0 };
-	EspeedFrame.identifier = 0xAA;
-	EspeedFrame.extd = 0;
-	EspeedFrame.data_length_code = 8;
-	EspeedFrame.data[0] = EChkSum;
-	EspeedFrame.data[1] = 0x40 + EMsgCtr;
-	EspeedFrame.data[2] = 0x1A;
-	EspeedFrame.data[3] = 0x5C;    
-	EspeedFrame.data[4] = CAN_EspeedL_1000;   
-	EspeedFrame.data[5] = CAN_EspeedH_1000;   
-	EspeedFrame.data[6] = 0x94;
-	EspeedFrame.data[7] = 0x00;
+void sendAccPedalFrame(uint8_t Espeed) { // 20 ms
+	CanFrame AA_Frame = { 0 };
+	AccPedal.identifier = 0xAA;
+	AccPedal.extd = 0;
+	AccPedal.data_length_code = 8;
+	AccPedal.data[0] = EChkSum;
+	AccPedal.data[1] = 0x40 + EMsgCtr;
+	AccPedal.data[2] = 0x1A;
+	AccPedal.data[3] = 0x5C;    
+	AccPedal.data[4] = CAN_EspeedL_1000;   
+	AccPedal.data[5] = CAN_EspeedH_1000;   
+	AccPedal.data[6] = 0x94;
+	AccPedal.data[7] = 0x00;
     // Accepts both pointers and references 
-  ESP32Can.writeFrame(EspeedFrame);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(AccPedal);  // timeout defaults to 1 ms
 }
 
-void sendE2Frame(uint8_t E2) { // 20 ms
-	CanFrame E2Frame = { 0 };
-	E2Frame.identifier = 0x1D0;
-	E2Frame.extd = 0;
-	E2Frame.data_length_code = 8;
-	E2Frame.data[0] = 0x80;
-	E2Frame.data[1] = 0x80;
-	E2Frame.data[2] = 0x60 + E2MsgCtr;
-	E2Frame.data[3] = 0xD0;    
-	E2Frame.data[4] = 0xCE;   
-	E2Frame.data[5] = 0x3A;   
-	E2Frame.data[6] = 0x0D;
-	E2Frame.data[7] = 0x91;
+void sendEngineDataFrame(uint8_t E2) { // 20 ms
+	CanFrame EngineData = { 0 };
+	EngineData.identifier = 0x1D0;
+	EngineData.extd = 0;
+	EngineData.data_length_code = 8;
+	EngineData.data[0] = 0x80;
+	EngineData.data[1] = 0x80;
+	EngineData.data[2] = 0x60 + E2MsgCtr;
+	EngineData.data[3] = 0xD0;    
+	EngineData.data[4] = 0xCE;   
+	EngineData.data[5] = 0x3A;   
+	EngineData.data[6] = 0x0D;
+	E2FEngineDatarame.data[7] = 0x91;
       // Accepts both pointers and references 
-  ESP32Can.writeFrame(E2Frame);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(EngineData);  // timeout defaults to 1 ms
 }
 
-void sendCASFrame(uint8_t CAS) { // 20 ms
-	CanFrame CASFrame = { 0 };
-	CASFrame.identifier = 0x130;
-	CASFrame.extd = 0;
-	CASFrame.data_length_code = 5;
-	CASFrame.data[0] = 0x45;
-	CASFrame.data[1] = 0x03;
-	CASFrame.data[2] = 0x29;
-	CASFrame.data[3] = 0x0F;    
-	CASFrame.data[4] = CMsgCtr + 0x00; // H nibble is counter and L nibble is checksum
+void sendTerminalStatusFrame(uint8_t CAS) { // 20 ms
+	CanFrame TerminalStatus = { 0 };
+	TerminalStatus.identifier = 0x130;
+	TerminalStatus.extd = 0;
+	TerminalStatus.data_length_code = 5;
+	TerminalStatus.data[0] = 0x45;
+	TerminalStatus.data[1] = 0x03;
+	TerminalStatus.data[2] = 0x29;
+	TerminalStatus.data[3] = 0x0F;    
+	TerminalStatus.data[4] = CMsgCtr + 0x00; // H nibble is counter and L nibble is checksum
 	    // Accepts both pointers and references 
-  ESP32Can.writeFrame(CASFrame);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(TerminalStatus);  // timeout defaults to 1 ms
 }
 
-void sendVspeedFrame(uint8_t Vspeed) { // 100 ms
+void sendSpeedFrame(uint8_t Vspeed) { // 100 ms
 	CanFrame VspeedFrame = { 0 };
-	VspeedFrame.identifier = 0x1A0;
-	VspeedFrame.extd = 0;
-	VspeedFrame.data_length_code = 8;
-	VspeedFrame.data[0] = CAN_VspeedL_20;
-	VspeedFrame.data[1] = 0x80+CAN_VspeedH_20;
-	VspeedFrame.data[2] = 0x00;
-	VspeedFrame.data[3] = 0x00;    
-	VspeedFrame.data[4] = 0x80;   
-	VspeedFrame.data[5] = 0x00;   
-	VspeedFrame.data[6] = (VMsgCtr * 0x10) + 0x08;
-	VspeedFrame.data[7] = VChkSum;
+	SpeedFrame.identifier = 0x1A0;
+	SpeedFrame.extd = 0;
+	SpeedFrame.data_length_code = 8;
+	SpeedFrame.data[0] = CAN_VspeedL_20;
+	SpeedFrame.data[1] = 0x80+CAN_VspeedH_20;
+	SpeedFrame.data[2] = 0x00;
+	SpeedFrame.data[3] = 0x00;    
+	SpeedFrame.data[4] = 0x80;   
+	SpeedFrame.data[5] = 0x00;   
+	SpeedFrame.data[6] = (VMsgCtr * 0x10) + 0x08;
+	SpeedFrame.data[7] = VChkSum;
     // Accepts both pointers and references 
-  ESP32Can.writeFrame(VspeedFrame);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(SpeedFrame);  // timeout defaults to 1 ms
 }
 
 void sendSteerAngFrame(uint8_t SteerAng) { // 200 ms
