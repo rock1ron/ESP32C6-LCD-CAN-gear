@@ -51,7 +51,7 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-int EChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, CMsgCtr, VMsgCtr, SMsgCtr = 0;
+int EChkSum, E2ChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, E2MsgCtr, CMsgCtr, VMsgCtr, SMsgCtr = 0;
 
 CanFrame rxFrame;
 
@@ -70,6 +70,24 @@ void sendEspeedFrame(uint8_t Espeed) { // 20 ms
 	EspeedFrame.data[7] = 0x00;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(EspeedFrame);  // timeout defaults to 1 ms
+}
+
+void sendE2Frame(uint8_t E2) { // 20 ms
+	CanFrame E2Frame = { 0 };
+	E2Frame.identifier = 0x1D0;
+	E2Frame.extd = 0;
+	E2Frame.data_length_code = 8;
+	E2Frame.data[0] = 0x7C;
+	E2Frame.data[1] = 0xFF;
+	E2Frame.data[2] = 0x40 + E2MsgCtr;
+	E2Frame.data[3] = 0xB1;    
+	E2Frame.data[4] = 0x2D;   
+	E2Frame.data[5] = 0xB6;   
+	E2Frame.data[6] = 0xCC;
+	E2Frame.data[7] = 0xA6
+  ;
+    // Accepts both pointers and references 
+  ESP32Can.writeFrame(E2Frame);  // timeout defaults to 1 ms
 }
 
 void sendCASFrame(uint8_t CAS) { // 20 ms
@@ -156,6 +174,7 @@ void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
   static uint32_t ElastStamp, ClastStamp, VlastStamp, SlastStamp = 0;
+  static uint32_t E2lastStamp = 50;
   uint32_t currentStamp = millis();
   
   
@@ -167,6 +186,13 @@ void loop() {
       sendEspeedFrame(EMsgCtr);
       Serial.print(ElastStamp);
       Serial.print(" E \n\r");
+  }    
+  if(currentStamp - E2lastStamp > 99) {   // sends frame every 100 ms
+      if (E2MsgCtr < 14) E2MsgCtr++; else E2MsgCtr = 0;
+      E2lastStamp = currentStamp;
+      sendE2Frame(E2MsgCtr);
+      Serial.print(E2lastStamp);
+      Serial.print(" E2 \n\r");
   }    
   if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
@@ -204,7 +230,7 @@ void loop() {
       }
   }
   */
-
+/*
   gear = (digitalRead(SOLENOID_A) + (digitalRead(SOLENOID_B) * 2));
   lockup = (digitalRead(TCC));
   if (gear != lastgear) {
@@ -220,7 +246,7 @@ if (lockup != lastlockup) {
     if (lockup) tft.print("L");
     else tft.print("U");
     }
-
+*/
 }
 
 
