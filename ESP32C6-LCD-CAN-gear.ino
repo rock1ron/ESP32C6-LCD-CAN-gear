@@ -71,24 +71,24 @@ void sendAccPedalFrame(uint8_t AccPedal) { // 20 ms
     // Accepts both pointers and references 
   ESP32Can.writeFrame(AccPedalFrame);  // timeout defaults to 1 ms
 }
-/*
+
 void sendEngineDataFrame(uint8_t EngineData) { // 20 ms
-	CanFrame EngineData = { 0 };
-	EngineData.identifier = 0x1D0;
-	EngineData.extd = 0;
-	EngineData.data_length_code = 8;
-	EngineData.data[0] = 0x80;
-	EngineData.data[1] = 0x80;
-	EngineData.data[2] = 0x60 + E2MsgCtr;
-	EngineData.data[3] = 0xD0;    
-	EngineData.data[4] = 0xCE;   
-	EngineData.data[5] = 0x3A;   
-	EngineData.data[6] = 0x0D;
-	E2FEngineDatarame.data[7] = 0x91;
+	CanFrame EngineDataFrame = { 0 };
+	EngineDataFrame.identifier = 0x1D0;
+	EngineDataFrame.extd = 0;
+	EngineDataFrame.data_length_code = 8;
+	EngineDataFrame.data[0] = 0x80;
+	EngineDataFrame.data[1] = 0x80;
+	EngineDataFrame.data[2] = 0x60 + E2MsgCtr;
+	EngineDataFrame.data[3] = 0xD0;    
+	EngineDataFrame.data[4] = 0xCE;   
+	EngineDataFrame.data[5] = 0x3A;   
+	EngineDataFrame.data[6] = 0x0D;
+	EngineDataFrame.data[7] = 0x91;
       // Accepts both pointers and references 
-  ESP32Can.writeFrame(EngineData);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(EngineDataFrame);  // timeout defaults to 1 ms
 }
-*/
+
 /*
 void sendTerminalStatusFrame(uint8_t CAS) { // 20 ms
 	CanFrame TerminalStatus = { 0 };
@@ -109,13 +109,13 @@ void sendSpeedFrame(uint8_t Speed) { // 100 ms
 	SpeedFrame.identifier = 0x1A0;
 	SpeedFrame.extd = 0;
 	SpeedFrame.data_length_code = 8;
-	SpeedFrame.data[0] = CAN_VspeedL_20;
-	SpeedFrame.data[1] = 0x10+CAN_VspeedH_20;
+	SpeedFrame.data[0] = 0x90;
+	SpeedFrame.data[1] = 0x11;
 	SpeedFrame.data[2] = 0x00;
-	SpeedFrame.data[3] = 0x08;    
-	SpeedFrame.data[4] = 0x80;   
+	SpeedFrame.data[3] = 0x00;    
+	SpeedFrame.data[4] = 0x00;   
 	SpeedFrame.data[5] = 0x00;   
-	SpeedFrame.data[6] = (VMsgCtr * 0x10) + 0x08;
+	SpeedFrame.data[6] = VMsgCtr * 0x10;
 	SpeedFrame.data[7] = VChkSum;
     // Accepts both pointers and references 
   ESP32Can.writeFrame(SpeedFrame);  // timeout defaults to 1 ms
@@ -190,15 +190,15 @@ void loop() {
       Serial.print(" E \n\r");
   }    
 */
-/*
+
   if(currentStamp - E2lastStamp > 99) {   // sends frame every 100 ms
       if (E2MsgCtr < 14) E2MsgCtr++; else E2MsgCtr = 0;
       E2lastStamp = currentStamp;
-      sendE2Frame(E2MsgCtr);
+      sendEngineDataFrame(E2MsgCtr); //0x1D0
       Serial.print(E2lastStamp);
-      Serial.print(" E2 \n\r");
+      Serial.print(" 0x1D0 \n\r");
   }    
-*/
+
 /*
   if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
@@ -211,12 +211,12 @@ void loop() {
   */
   if(currentStamp - VlastStamp > 159) {   // sends frame every 160 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
-      VChkSum = (VMsgCtr * 0x10) + 0x10A;
+      VChkSum = (VMsgCtr * 0x10) + 0xA1;
       VChkSum = VChkSum % 0x100;  // Precalculated checksum offset value
       VlastStamp = currentStamp;
-      sendSpeedFrame(VMsgCtr);
+      sendSpeedFrame(VMsgCtr); // 0x1A0
       Serial.print(VlastStamp);
-      Serial.print(" V \n\r");
+      Serial.print(" 0x1A0 \n\r");
   }
 /*  
   if(currentStamp - SlastStamp > 199) {   // sends frame every 200 ms
