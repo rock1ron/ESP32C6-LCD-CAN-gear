@@ -30,7 +30,7 @@
 
 #define CAN_EspeedL_1000 0xA0
 #define CAN_EspeedH_1000 0x0F
-#define CAN_VspeedL_20 0xC2 // 20 km/h
+#define CAN_VspeedL_20 0xC8 // 20 km/h
 #define CAN_VspeedH_20 0x00
 #define ChkSumOffset_0xAA  85 
 #define ChkSumOffset_0x130  1 //?
@@ -55,24 +55,24 @@ int EChkSum, E2ChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, E2MsgCtr, CMsgCtr, VM
 
 CanFrame rxFrame;
 
-void sendAccPedalFrame(uint8_t Espeed) { // 20 ms
-	CanFrame AA_Frame = { 0 };
-	AccPedal.identifier = 0xAA;
-	AccPedal.extd = 0;
-	AccPedal.data_length_code = 8;
-	AccPedal.data[0] = EChkSum;
-	AccPedal.data[1] = 0x40 + EMsgCtr;
-	AccPedal.data[2] = 0x1A;
-	AccPedal.data[3] = 0x5C;    
-	AccPedal.data[4] = CAN_EspeedL_1000;   
-	AccPedal.data[5] = CAN_EspeedH_1000;   
-	AccPedal.data[6] = 0x94;
-	AccPedal.data[7] = 0x00;
+void sendAccPedalFrame(uint8_t AccPedal) { // 20 ms
+	CanFrame AccPedalFrame = { 0 };
+	AccPedalFrame.identifier = 0xAA;
+	AccPedalFrame.extd = 0;
+	AccPedalFrame.data_length_code = 8;
+	AccPedalFrame.data[0] = EChkSum;
+	AccPedalFrame.data[1] = 0x40 + EMsgCtr;
+	AccPedalFrame.data[2] = 0x1A;
+	AccPedalFrame.data[3] = 0x5C;    
+	AccPedalFrame.data[4] = CAN_EspeedL_1000;   
+	AccPedalFrame.data[5] = CAN_EspeedH_1000;   
+	AccPedalFrame.data[6] = 0x94;
+	AccPedalFrame.data[7] = 0x00;
     // Accepts both pointers and references 
-  ESP32Can.writeFrame(AccPedal);  // timeout defaults to 1 ms
+  ESP32Can.writeFrame(AccPedalFrame);  // timeout defaults to 1 ms
 }
-
-void sendEngineDataFrame(uint8_t E2) { // 20 ms
+/*
+void sendEngineDataFrame(uint8_t EngineData) { // 20 ms
 	CanFrame EngineData = { 0 };
 	EngineData.identifier = 0x1D0;
 	EngineData.extd = 0;
@@ -88,7 +88,8 @@ void sendEngineDataFrame(uint8_t E2) { // 20 ms
       // Accepts both pointers and references 
   ESP32Can.writeFrame(EngineData);  // timeout defaults to 1 ms
 }
-
+*/
+/*
 void sendTerminalStatusFrame(uint8_t CAS) { // 20 ms
 	CanFrame TerminalStatus = { 0 };
 	TerminalStatus.identifier = 0x130;
@@ -102,16 +103,16 @@ void sendTerminalStatusFrame(uint8_t CAS) { // 20 ms
 	    // Accepts both pointers and references 
   ESP32Can.writeFrame(TerminalStatus);  // timeout defaults to 1 ms
 }
-
-void sendSpeedFrame(uint8_t Vspeed) { // 100 ms
-	CanFrame VspeedFrame = { 0 };
+*/
+void sendSpeedFrame(uint8_t Speed) { // 100 ms
+	CanFrame SpeedFrame = { 0 };
 	SpeedFrame.identifier = 0x1A0;
 	SpeedFrame.extd = 0;
 	SpeedFrame.data_length_code = 8;
 	SpeedFrame.data[0] = CAN_VspeedL_20;
-	SpeedFrame.data[1] = 0x80+CAN_VspeedH_20;
+	SpeedFrame.data[1] = 0x10+CAN_VspeedH_20;
 	SpeedFrame.data[2] = 0x00;
-	SpeedFrame.data[3] = 0x00;    
+	SpeedFrame.data[3] = 0x08;    
 	SpeedFrame.data[4] = 0x80;   
 	SpeedFrame.data[5] = 0x00;   
 	SpeedFrame.data[6] = (VMsgCtr * 0x10) + 0x08;
@@ -119,7 +120,7 @@ void sendSpeedFrame(uint8_t Vspeed) { // 100 ms
     // Accepts both pointers and references 
   ESP32Can.writeFrame(SpeedFrame);  // timeout defaults to 1 ms
 }
-
+/*
 void sendSteerAngFrame(uint8_t SteerAng) { // 200 ms
 	CanFrame SteerAngFrame = { 0 };
 	SteerAngFrame.identifier = 0xC8;
@@ -134,6 +135,8 @@ void sendSteerAngFrame(uint8_t SteerAng) { // 200 ms
 	  // Accepts both pointers and references 
   ESP32Can.writeFrame(SteerAngFrame);  // timeout defaults to 1 ms
 }
+*/
+
 void setup(void) {
   pinMode(SOLENOID_A, INPUT);   
   pinMode(SOLENOID_B, INPUT);   
@@ -187,6 +190,7 @@ void loop() {
       Serial.print(" E \n\r");
   }    
 */
+/*
   if(currentStamp - E2lastStamp > 99) {   // sends frame every 100 ms
       if (E2MsgCtr < 14) E2MsgCtr++; else E2MsgCtr = 0;
       E2lastStamp = currentStamp;
@@ -194,6 +198,7 @@ void loop() {
       Serial.print(E2lastStamp);
       Serial.print(" E2 \n\r");
   }    
+*/
 /*
   if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
       if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
@@ -206,10 +211,10 @@ void loop() {
   */
   if(currentStamp - VlastStamp > 159) {   // sends frame every 160 ms
       if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
-      // VChkSum = VMsgCtr + ChkSumOffset_0x1A0;
-      VChkSum = (VMsgCtr - 0x5E) % 0x100;  // Precalculated checksum offset value
+      VChkSum = (VMsgCtr * 0x10) + 0x10A;
+      VChkSum = VChkSum % 0x100;  // Precalculated checksum offset value
       VlastStamp = currentStamp;
-      sendVspeedFrame(VMsgCtr);
+      sendSpeedFrame(VMsgCtr);
       Serial.print(VlastStamp);
       Serial.print(" V \n\r");
   }
