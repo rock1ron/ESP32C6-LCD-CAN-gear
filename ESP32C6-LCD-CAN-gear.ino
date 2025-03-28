@@ -28,14 +28,17 @@
 #define TFT_WIDTH   172
 #define TFT_HEIGTH  320
 
-#define CAN_EspeedL_1000 0xA0
+#define CAN_EspeedL_1000 0xA0 // 1000 rpm
 #define CAN_EspeedH_1000 0x0F
-#define CAN_VspeedL_20 0xC8 // 20 km/h
-#define CAN_VspeedH_20 0x00
-#define ChkSumOffset_0xAA  85 
-#define ChkSumOffset_0x130  1 //?
-#define ChkSumOffset_0x1A0 94
-#define ChkSumOffset_0xC8 108
+#define CAN_VspeedL_0xAA_20 0xC8 // 20 km/h
+#define CAN_VspeedH_0xAA_20 0x00
+
+#define ChkSumOffset_AA  85 
+#define ChkSumOffset_C4 108
+#define ChkSumOffset_C8 108
+#define ChkSumOffset_130  1 
+#define ChkSumOffset_1A0 94
+#define ChkSumOffset_1D0 94
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
 // to each board and not reassignable. For Arduino Uno: MOSI = pin 11 and
@@ -51,91 +54,102 @@
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-int EChkSum, E2ChkSum, CChkSum, VChkSum, SChkSum, EMsgCtr, E2MsgCtr, CMsgCtr, VMsgCtr, SMsgCtr = 0;
+int ChkSum_AA, ChkSum_C4, ChkSum_C8, ChkSum_130, ChkSum_1A0, ChkSum_1D0 = 0; 
+int MsgCtr_AA, MsgCtr_C4, MsgCtr_C8, MsgCtr_130, MsgCtr_1A0, MsgCtr_1D0 = 0;
 
 CanFrame rxFrame;
 
-void sendAccPedalFrame(uint8_t AccPedal) { // 20 ms
-	CanFrame AccPedalFrame = { 0 };
-	AccPedalFrame.identifier = 0xAA;
-	AccPedalFrame.extd = 0;
-	AccPedalFrame.data_length_code = 8;
-	AccPedalFrame.data[0] = EChkSum;
-	AccPedalFrame.data[1] = 0x40 + EMsgCtr;
-	AccPedalFrame.data[2] = 0x1A;
-	AccPedalFrame.data[3] = 0x5C;    
-	AccPedalFrame.data[4] = CAN_EspeedL_1000;   
-	AccPedalFrame.data[5] = CAN_EspeedH_1000;   
-	AccPedalFrame.data[6] = 0x94;
-	AccPedalFrame.data[7] = 0x00;
-    // Accepts both pointers and references 
-  ESP32Can.writeFrame(AccPedalFrame);  // timeout defaults to 1 ms
+
+void send_0xAA_Frame(uint8_t AccPedal) { // 20 ms // AccPedal
+	CanFrame _0xAA_Frame = { 0 };
+	_0xAA_Frame.identifier = 0xAA; // 170
+	_0xAA_Frame.extd = 0;
+	_0xAA_Frame.data_length_code = 8;
+	_0xAA_Frame.data[0] = 0x00;
+	_0xAA_Frame.data[1] = 0x40 + MsgCtr_AA;
+	_0xAA_Frame.data[2] = 0x1A;
+	_0xAA_Frame.data[3] = 0x5C;    
+	_0xAA_Frame.data[4] = CAN_EspeedL_1000;   
+	_0xAA_Frame.data[5] = CAN_EspeedH_1000;   
+	_0xAA_Frame.data[6] = 0x94;
+	_0xAA_Frame.data[7] = 0x00;
+  ESP32Can.writeFrame(_0xAA_Frame);  // timeout defaults to 1 ms
 }
 
-void sendEngineDataFrame(uint8_t EngineData) { // 20 ms
-	CanFrame EngineDataFrame = { 0 };
-	EngineDataFrame.identifier = 0x1D0;
-	EngineDataFrame.extd = 0;
-	EngineDataFrame.data_length_code = 8;
-	EngineDataFrame.data[0] = 0x80;
-	EngineDataFrame.data[1] = 0x80;
-	EngineDataFrame.data[2] = 0x60 + E2MsgCtr;
-	EngineDataFrame.data[3] = 0xD0;    
-	EngineDataFrame.data[4] = 0xCE;   
-	EngineDataFrame.data[5] = 0x3A;   
-	EngineDataFrame.data[6] = 0x0D;
-	EngineDataFrame.data[7] = 0x91;
-      // Accepts both pointers and references 
-  ESP32Can.writeFrame(EngineDataFrame);  // timeout defaults to 1 ms
+void send_0xC4_Frame(uint8_t SteerAng) { // 10 ms // SteeringWheelAngle
+	CanFrame _0xC4_Frame = { 0 };
+	_0xC4_Frame.identifier = 0xC4; // 196
+	_0xC4_Frame.extd = 0;
+	_0xC4_Frame.data_length_code = 7;
+	_0xC4_Frame.data[0] = 0xBA;
+	_0xC4_Frame.data[1] = 0x02;
+	_0xC4_Frame.data[2] = MsgCtr_C4;
+	_0xC4_Frame.data[3] = 0x00;    
+	_0xC4_Frame.data[4] = 0x00;   
+	_0xC4_Frame.data[5] = 0x00;   
+	_0xC4_Frame.data[6] = ChkSum_C4;   
+  ESP32Can.writeFrame(_0xC4_Frame);  // timeout defaults to 1 ms
 }
 
-/*
-void sendTerminalStatusFrame(uint8_t CAS) { // 20 ms
-	CanFrame TerminalStatus = { 0 };
-	TerminalStatus.identifier = 0x130;
-	TerminalStatus.extd = 0;
-	TerminalStatus.data_length_code = 5;
-	TerminalStatus.data[0] = 0x45;
-	TerminalStatus.data[1] = 0x03;
-	TerminalStatus.data[2] = 0x29;
-	TerminalStatus.data[3] = 0x0F;    
-	TerminalStatus.data[4] = CMsgCtr + 0x00; // H nibble is counter and L nibble is checksum
-	    // Accepts both pointers and references 
-  ESP32Can.writeFrame(TerminalStatus);  // timeout defaults to 1 ms
+void send_0xC8_Frame(uint8_t SteerAng) { // 200 ms // SteeringWheelAngle_slow
+	CanFrame _0xC8_Frame = { 0 };
+	_0xC8_Frame.identifier = 0xC8; // 200
+	_0xC8_Frame.extd = 0;
+	_0xC8_Frame.data_length_code = 6;
+	_0xC8_Frame.data[0] = 0xBA;
+	_0xC8_Frame.data[1] = 0x02;
+	_0xC8_Frame.data[2] = MsgCtr_C8;
+	_0xC8_Frame.data[3] = 0x00;    
+	_0xC8_Frame.data[4] = 0x00;   
+	_0xC8_Frame.data[5] = ChkSum_C8;   
+  ESP32Can.writeFrame(_0xC8_Frame);  // timeout defaults to 1 ms
 }
-*/
-void sendSpeedFrame(uint8_t Speed) { // 100 ms
-	CanFrame SpeedFrame = { 0 };
-	SpeedFrame.identifier = 0x1A0;
-	SpeedFrame.extd = 0;
-	SpeedFrame.data_length_code = 8;
-	SpeedFrame.data[0] = 0x90;
-	SpeedFrame.data[1] = 0x11;
-	SpeedFrame.data[2] = 0x00;
-	SpeedFrame.data[3] = 0x00;    
-	SpeedFrame.data[4] = 0x00;   
-	SpeedFrame.data[5] = 0x00;   
-	SpeedFrame.data[6] = VMsgCtr * 0x10;
-	SpeedFrame.data[7] = VChkSum;
-    // Accepts both pointers and references 
-  ESP32Can.writeFrame(SpeedFrame);  // timeout defaults to 1 ms
+
+void send_0x130_Frame(uint8_t TerminalStatus) { // 100 ms // TerminalStatus
+	CanFrame _0x130_Frame = { 0 };
+	_0x130_Frame.identifier = 0x130; // 304
+	_0x130_Frame.extd = 0;
+	_0x130_Frame.data_length_code = 5;
+	_0x130_Frame.data[0] = 0x45;
+	_0x130_Frame.data[1] = 0x03;
+	_0x130_Frame.data[2] = 0x29;
+	_0x130_Frame.data[3] = 0x0F;    
+	_0x130_Frame.data[4] = MsgCtr_130; // H nibble is checksum and L nibble is counter
+  ESP32Can.writeFrame(_0x130_Frame);  // timeout defaults to 1 ms
 }
-/*
-void sendSteerAngFrame(uint8_t SteerAng) { // 200 ms
-	CanFrame SteerAngFrame = { 0 };
-	SteerAngFrame.identifier = 0xC8;
-	SteerAngFrame.extd = 0;
-	SteerAngFrame.data_length_code = 6;
-	SteerAngFrame.data[0] = 0xBA;
-	SteerAngFrame.data[1] = 0x02;
-	SteerAngFrame.data[2] = SMsgCtr;
-	SteerAngFrame.data[3] = 0x00;    
-	SteerAngFrame.data[4] = 0x00;   
-	SteerAngFrame.data[5] = SChkSum;   
-	  // Accepts both pointers and references 
-  ESP32Can.writeFrame(SteerAngFrame);  // timeout defaults to 1 ms
+
+void send_0x1A0_Frame(uint8_t Speed) { // 160 ms // Speed
+	CanFrame _0x1A0_Frame = { 0 };
+	_0x1A0_Frame.identifier = 0x1A0; // 416
+	_0x1A0_Frame.extd = 0;
+	_0x1A0_Frame.data_length_code = 8;
+	_0x1A0_Frame.data[0] = 0x90;
+	_0x1A0_Frame.data[1] = 0x11;
+	_0x1A0_Frame.data[2] = 0x00;
+	_0x1A0_Frame.data[3] = 0x00;    
+	_0x1A0_Frame.data[4] = 0x00;   
+	_0x1A0_Frame.data[5] = 0x00;   
+	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10; // H nibble is counter
+	_0x1A0_Frame.data[7] = ChkSum_1A0;
+  ESP32Can.writeFrame(_0x1A0_Frame);  // timeout defaults to 1 ms
 }
-*/
+
+void send_0x1D0_Frame(uint8_t EngineData) { // 200 ms // EngineData
+	CanFrame _0x1D0_Frame = { 0 };
+	_0x1D0_Frame.identifier = 0x1D0; // 464
+	_0x1D0_Frame.extd = 0;
+	_0x1D0_Frame.data_length_code = 8;
+	_0x1D0_Frame.data[0] = 0x80;
+	_0x1D0_Frame.data[1] = 0x80;
+	_0x1D0_Frame.data[2] = MsgCtr_1D0;
+	_0x1D0_Frame.data[3] = 0xD0;    
+	_0x1D0_Frame.data[4] = 0xCE;   
+	_0x1D0_Frame.data[5] = 0x3A;   
+	_0x1D0_Frame.data[6] = 0x0D;
+	_0x1D0_Frame.data[7] = 0x91;
+  ESP32Can.writeFrame(_0x1D0_Frame);  // timeout defaults to 1 ms
+}
+
 
 void setup(void) {
   pinMode(SOLENOID_A, INPUT);   
@@ -175,68 +189,71 @@ void setup(void) {
 void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
-  static uint32_t ElastStamp, ClastStamp, VlastStamp, SlastStamp = 0;
-  static uint32_t E2lastStamp = 50;
+  static uint32_t lastStamp_AA_20ms, lastStamp_C4_10ms, lastStamp_C8_200ms, lastStamp_130_100ms, lastStamp_1A0_160ms, lastStamp_1D0_200ms  = 0;
   uint32_t currentStamp = millis();
   
-/*  
-  if(currentStamp - ElastStamp > 19) {   // sends frame every 20 ms
-      if (EMsgCtr < 14) EMsgCtr++; else EMsgCtr = 0;
-      // EChkSum = EMsgCtr + ChkSumOffset_0xAA;
-      EChkSum = EMsgCtr + 0xF5; // Test with precalculated values
-      ElastStamp = currentStamp;
-      sendEspeedFrame(EMsgCtr);
-      Serial.print(ElastStamp);
-      Serial.print(" E \n\r");
-  }    
-*/
 
-  if(currentStamp - E2lastStamp > 99) {   // sends frame every 100 ms
-      if (E2MsgCtr < 14) E2MsgCtr++; else E2MsgCtr = 0;
-      E2lastStamp = currentStamp;
-      sendEngineDataFrame(E2MsgCtr); //0x1D0
-      Serial.print(E2lastStamp);
-      Serial.print(" 0x1D0 \n\r");
+  if(currentStamp - lastStamp_AA_20ms > 19) {   // sends frame every 20 ms
+      if (MsgCtr_AA < 14) MsgCtr_AA++; else MsgCtr_AA = 0;
+      ChkSum_AA = (MsgCtr_AA + ChkSumOffset_AA) % 0x100; // Test with precalculated values
+      lastStamp_AA_20ms = currentStamp;
+      send_0xAA_Frame(MsgCtr_AA);
+      Serial.print(lastStamp_AA_20ms);
+      Serial.print(" 0xAA \n\r");
   }    
 
-/*
-  if(currentStamp - ClastStamp > 99) {   // sends frame every 100 ms
-      if (CMsgCtr < 14) CMsgCtr++; else CMsgCtr = 0;
-      CChkSum = (CMsgCtr * 0x10) + (CMsgCtr + 0xB5) % 0x10; // Test with precalculated values
-      ClastStamp = currentStamp;
-      sendCASFrame(CMsgCtr);
-      Serial.print(ClastStamp);
-      Serial.print(" C \n\r");
+  if(currentStamp - lastStamp_C4_10ms > 9) {   // sends frame every 100 ms
+      if (MsgCtr_C4 < 14) MsgCtr_C4++; else MsgCtr_C4 = 0;
+      ChkSum_C4 = (MsgCtr_C4 + ChkSumOffset_C4) % 0x100;
+      lastStamp_C4_10ms = currentStamp;
+      send_0xC4_Frame(MsgCtr_C4);
+      Serial.print(lastStamp_C4_10ms);
+      Serial.print(" 0xC4 \n\r");
+  }    
+
+  if(currentStamp - lastStamp_C8_200ms > 199) {   // sends frame every 100 ms
+      if (MsgCtr_C8 < 14) MsgCtr_C8++; else MsgCtr_C8 = 0;
+      ChkSum_C8 = ((MsgCtr_C8 * 0x10) + ChkSumOffset_C8) % 0x100; // Test with precalculated values
+      lastStamp_C8_200ms = currentStamp;
+      send_0xC8_Frame(MsgCtr_C8);
+      Serial.print(lastStamp_C8_200ms);
+      Serial.print(" 0xC8 \n\r");
   }
-  */
-  if(currentStamp - VlastStamp > 159) {   // sends frame every 160 ms
-      if (VMsgCtr < 14) VMsgCtr++; else VMsgCtr = 0;
-      VChkSum = (VMsgCtr * 0x10) + 0xA1;
-      VChkSum = VChkSum % 0x100;  // Precalculated checksum offset value
-      VlastStamp = currentStamp;
-      sendSpeedFrame(VMsgCtr); // 0x1A0
-      Serial.print(VlastStamp);
+
+  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 160 ms
+      if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
+      ChkSum_130 = (MsgCtr_C4 + ChkSumOffset_130) % 0x100;
+      lastStamp_130_100ms = currentStamp;
+      send_0x130_Frame(MsgCtr_130); // 0x1A0
+      Serial.print(lastStamp_130_100ms);
+      Serial.print(" 0x130 \n\r");
+  }
+
+  if(currentStamp - lastStamp_1A0_160ms > 199) {   // sends frame every 200 ms
+      if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
+      ChkSum_1A0 = (MsgCtr_1A0 + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
+      lastStamp_1A0_160ms = currentStamp;
+      send_0x1A0_Frame(MsgCtr_1A0);
+      Serial.print(lastStamp_1A0_160ms);
       Serial.print(" 0x1A0 \n\r");
   }
-/*  
-  if(currentStamp - SlastStamp > 199) {   // sends frame every 200 ms
-      if (SMsgCtr < 14) SMsgCtr++; else SMsgCtr = 0;
-      // SChkSum = SMsgCtr + ChkSumOffset_0xC8;
-      SChkSum = SMsgCtr + 0x50;  // Test with precalculated values
-      SlastStamp = currentStamp;
-      sendSteerAngFrame(SMsgCtr);
-      Serial.print(SlastStamp);
-      Serial.print(" S \n\r");
+
+  if(currentStamp - lastStamp_1D0_200ms > 199) {   // sends frame every 200 ms
+      if (MsgCtr_1D0 < 14) MsgCtr_1D0++; else MsgCtr_1D0 = 0;
+      ChkSum_1D0 = (MsgCtr_1D0 + ChkSumOffset_1D0) % 0x100;  // Test with precalculated values
+      lastStamp_1D0_200ms = currentStamp;
+      send_0x1D0_Frame(MsgCtr_1D0);
+      Serial.print(lastStamp_1D0_200ms);
+      Serial.print(" 0x1D0 \n\r");
   }
-*/  
-  /*
+/*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
       if(rxFrame.identifier == 0x1A0) {   // 
           Serial.printf("V-spd: %3dkm/h \r\n", rxFrame.data[0]); 
       }
   }
-  */
+*/
 /*
   gear = (digitalRead(SOLENOID_A) + (digitalRead(SOLENOID_B) * 2));
   lockup = (digitalRead(TCC));
