@@ -33,12 +33,13 @@
 #define CAN_VspeedL_0xAA_20 0xC8 // 20 km/h
 #define CAN_VspeedH_0xAA_20 0x00
 
-#define ChkSumOffset_AA  85 
-#define ChkSumOffset_C4 108
-#define ChkSumOffset_C8 108
-#define ChkSumOffset_130  1 
-#define ChkSumOffset_1A0 94
-#define ChkSumOffset_1D0 94
+#define ChkSumOffset_AA   245 
+#define ChkSumOffset_C4   108
+#define ChkSumOffset_C8   108
+#define ChkSumOffset_130   11 
+#define ChkSumOffset_130_B 203
+#define ChkSumOffset_1A0  170
+#define ChkSumOffset_1D0   94
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
 // to each board and not reassignable. For Arduino Uno: MOSI = pin 11 and
@@ -65,12 +66,12 @@ void send_0xAA_Frame(uint8_t AccPedal) { // 20 ms // AccPedal
 	_0xAA_Frame.identifier = 0xAA; // 170
 	_0xAA_Frame.extd = 0;
 	_0xAA_Frame.data_length_code = 8;
-	_0xAA_Frame.data[0] = 0x00;
+	_0xAA_Frame.data[0] = ChkSum_AA;
 	_0xAA_Frame.data[1] = 0x40 + MsgCtr_AA;
 	_0xAA_Frame.data[2] = 0x1A;
 	_0xAA_Frame.data[3] = 0x5C;    
-	_0xAA_Frame.data[4] = CAN_EspeedL_1000;   
-	_0xAA_Frame.data[5] = CAN_EspeedH_1000;   
+	_0xAA_Frame.data[4] = 0x00; //CAN_EspeedL_1000;   
+	_0xAA_Frame.data[5] = 0x00; //CAN_EspeedH_1000;   
 	_0xAA_Frame.data[6] = 0x94;
 	_0xAA_Frame.data[7] = 0x00;
   ESP32Can.writeFrame(_0xAA_Frame);  // timeout defaults to 1 ms
@@ -78,16 +79,16 @@ void send_0xAA_Frame(uint8_t AccPedal) { // 20 ms // AccPedal
 
 void send_0xC4_Frame(uint8_t SteerAng) { // 10 ms // SteeringWheelAngle
 	CanFrame _0xC4_Frame = { 0 };
-	_0xC4_Frame.identifier = 0xC4; // 196
+	_0xC4_Frame.identifier = ChkSum_C4; // 196
 	_0xC4_Frame.extd = 0;
 	_0xC4_Frame.data_length_code = 7;
-	_0xC4_Frame.data[0] = 0xBA;
+	_0xC4_Frame.data[0] = 0xBD;
 	_0xC4_Frame.data[1] = 0x02;
-	_0xC4_Frame.data[2] = MsgCtr_C4;
+	_0xC4_Frame.data[2] = 0xFC;
 	_0xC4_Frame.data[3] = 0x00;    
 	_0xC4_Frame.data[4] = 0x00;   
-	_0xC4_Frame.data[5] = 0x00;   
-	_0xC4_Frame.data[6] = ChkSum_C4;   
+	_0xC4_Frame.data[5] = 0xFF;   
+	_0xC4_Frame.data[6] = 0xF1;   
   ESP32Can.writeFrame(_0xC4_Frame);  // timeout defaults to 1 ms
 }
 
@@ -123,13 +124,13 @@ void send_0x1A0_Frame(uint8_t Speed) { // 160 ms // Speed
 	_0x1A0_Frame.identifier = 0x1A0; // 416
 	_0x1A0_Frame.extd = 0;
 	_0x1A0_Frame.data_length_code = 8;
-	_0x1A0_Frame.data[0] = 0x90;
-	_0x1A0_Frame.data[1] = 0x11;
+	_0x1A0_Frame.data[0] = 0x00;
+	_0x1A0_Frame.data[1] = 0x80;
 	_0x1A0_Frame.data[2] = 0x00;
 	_0x1A0_Frame.data[3] = 0x00;    
 	_0x1A0_Frame.data[4] = 0x00;   
 	_0x1A0_Frame.data[5] = 0x00;   
-	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10; // H nibble is counter
+	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10 + 0x08; // H nibble is counter
 	_0x1A0_Frame.data[7] = ChkSum_1A0;
   ESP32Can.writeFrame(_0x1A0_Frame);  // timeout defaults to 1 ms
 }
@@ -139,14 +140,14 @@ void send_0x1D0_Frame(uint8_t EngineData) { // 200 ms // EngineData
 	_0x1D0_Frame.identifier = 0x1D0; // 464
 	_0x1D0_Frame.extd = 0;
 	_0x1D0_Frame.data_length_code = 8;
-	_0x1D0_Frame.data[0] = 0x80;
-	_0x1D0_Frame.data[1] = 0x80;
-	_0x1D0_Frame.data[2] = MsgCtr_1D0;
-	_0x1D0_Frame.data[3] = 0xD0;    
-	_0x1D0_Frame.data[4] = 0xCE;   
-	_0x1D0_Frame.data[5] = 0x3A;   
-	_0x1D0_Frame.data[6] = 0x0D;
-	_0x1D0_Frame.data[7] = 0x91;
+	_0x1D0_Frame.data[0] = 0x7C;
+	_0x1D0_Frame.data[1] = 0xFF;
+	_0x1D0_Frame.data[2] = 0x40 + MsgCtr_1D0;
+	_0x1D0_Frame.data[3] = 0xB1;    
+	_0x1D0_Frame.data[4] = 0x2D;   
+	_0x1D0_Frame.data[5] = 0xB6;   
+	_0x1D0_Frame.data[6] = 0xCC;
+	_0x1D0_Frame.data[7] = 0xA6;
   ESP32Can.writeFrame(_0x1D0_Frame);  // timeout defaults to 1 ms
 }
 
@@ -191,7 +192,6 @@ void loop() {
   int gear, lockup = 0;
   static uint32_t lastStamp_AA_20ms, lastStamp_C4_10ms, lastStamp_C8_200ms, lastStamp_130_100ms, lastStamp_1A0_160ms, lastStamp_1D0_200ms  = 0;
   uint32_t currentStamp = millis();
-  
 
   if(currentStamp - lastStamp_AA_20ms > 19) {   // sends frame every 20 ms
       if (MsgCtr_AA < 14) MsgCtr_AA++; else MsgCtr_AA = 0;
@@ -204,13 +204,13 @@ void loop() {
 
   if(currentStamp - lastStamp_C4_10ms > 9) {   // sends frame every 100 ms
       if (MsgCtr_C4 < 14) MsgCtr_C4++; else MsgCtr_C4 = 0;
-      ChkSum_C4 = (MsgCtr_C4 + ChkSumOffset_C4) % 0x100;
+      // ChkSum_C4 = (MsgCtr_C4 + ChkSumOffset_C4) % 0x100;
       lastStamp_C4_10ms = currentStamp;
       send_0xC4_Frame(MsgCtr_C4);
       Serial.print(lastStamp_C4_10ms);
       Serial.print(" 0xC4 \n\r");
   }    
-
+/*
   if(currentStamp - lastStamp_C8_200ms > 199) {   // sends frame every 100 ms
       if (MsgCtr_C8 < 14) MsgCtr_C8++; else MsgCtr_C8 = 0;
       ChkSum_C8 = ((MsgCtr_C8 * 0x10) + ChkSumOffset_C8) % 0x100; // Test with precalculated values
@@ -219,10 +219,11 @@ void loop() {
       Serial.print(lastStamp_C8_200ms);
       Serial.print(" 0xC8 \n\r");
   }
-
+*/
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 160 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
-      ChkSum_130 = (MsgCtr_C4 + ChkSumOffset_130) % 0x100;
+      // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
+      ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130_B) % 0x10) * 0x10) + MsgCtr_130;
       lastStamp_130_100ms = currentStamp;
       send_0x130_Frame(MsgCtr_130); // 0x1A0
       Serial.print(lastStamp_130_100ms);
@@ -231,21 +232,22 @@ void loop() {
 
   if(currentStamp - lastStamp_1A0_160ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
-      ChkSum_1A0 = (MsgCtr_1A0 + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
+      ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
       lastStamp_1A0_160ms = currentStamp;
       send_0x1A0_Frame(MsgCtr_1A0);
       Serial.print(lastStamp_1A0_160ms);
       Serial.print(" 0x1A0 \n\r");
   }
-
+/*
   if(currentStamp - lastStamp_1D0_200ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_1D0 < 14) MsgCtr_1D0++; else MsgCtr_1D0 = 0;
-      ChkSum_1D0 = (MsgCtr_1D0 + ChkSumOffset_1D0) % 0x100;  // Test with precalculated values
+      // ChkSum_1D0 = (MsgCtr_1D0 + ChkSumOffset_1D0) % 0x100;  // Test with precalculated values
       lastStamp_1D0_200ms = currentStamp;
       send_0x1D0_Frame(MsgCtr_1D0);
       Serial.print(lastStamp_1D0_200ms);
       Serial.print(" 0x1D0 \n\r");
   }
+*/
 /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
