@@ -79,7 +79,7 @@ void send_0xAA_Frame(uint8_t AccPedal) { // 20 ms // AccPedal
 
 void send_0xC4_Frame(uint8_t SteerAng) { // 10 ms // SteeringWheelAngle
 	CanFrame _0xC4_Frame = { 0 };
-	_0xC4_Frame.identifier = ChkSum_C4; // 196
+	_0xC4_Frame.identifier = 0xC4; // 196
 	_0xC4_Frame.extd = 0;
 	_0xC4_Frame.data_length_code = 7;
 	_0xC4_Frame.data[0] = 0xBD;
@@ -115,7 +115,7 @@ void send_0x130_Frame(uint8_t TerminalStatus) { // 100 ms // TerminalStatus
 	_0x130_Frame.data[1] = 0x03;
 	_0x130_Frame.data[2] = 0x29;
 	_0x130_Frame.data[3] = 0x0F;    
-	_0x130_Frame.data[4] = MsgCtr_130; // H nibble is checksum and L nibble is counter
+	_0x130_Frame.data[4] = ChkSum_130; // H nibble is checksum and L nibble is counter
   ESP32Can.writeFrame(_0x130_Frame);  // timeout defaults to 1 ms
 }
 
@@ -223,7 +223,8 @@ void loop() {
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 160 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
-      ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130_B) % 0x10) * 0x10) + MsgCtr_130;
+      ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
+      ChkSum_130 = (ChkSum_130 * 0x10) + MsgCtr_130;
       lastStamp_130_100ms = currentStamp;
       send_0x130_Frame(MsgCtr_130); // 0x1A0
       Serial.print(lastStamp_130_100ms);
@@ -238,7 +239,7 @@ void loop() {
       Serial.print(lastStamp_1A0_160ms);
       Serial.print(" 0x1A0 \n\r");
   }
-/*
+
   if(currentStamp - lastStamp_1D0_200ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_1D0 < 14) MsgCtr_1D0++; else MsgCtr_1D0 = 0;
       // ChkSum_1D0 = (MsgCtr_1D0 + ChkSumOffset_1D0) % 0x100;  // Test with precalculated values
@@ -247,7 +248,7 @@ void loop() {
       Serial.print(lastStamp_1D0_200ms);
       Serial.print(" 0x1D0 \n\r");
   }
-*/
+
 /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
