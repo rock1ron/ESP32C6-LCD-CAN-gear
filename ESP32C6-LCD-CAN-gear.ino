@@ -130,7 +130,7 @@ void send_0x1A0_Frame(uint8_t Speed) { // 160 ms // Speed
 	_0x1A0_Frame.data[3] = 0x00;    
 	_0x1A0_Frame.data[4] = 0x00;   
 	_0x1A0_Frame.data[5] = 0x00;   
-	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10 + 0x08; // H nibble is counter
+	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10; // H nibble is counter
 	_0x1A0_Frame.data[7] = ChkSum_1A0;
   ESP32Can.writeFrame(_0x1A0_Frame);  // timeout defaults to 1 ms
 }
@@ -150,7 +150,6 @@ void send_0x1D0_Frame(uint8_t EngineData) { // 200 ms // EngineData
 	_0x1D0_Frame.data[7] = 0xA6;
   ESP32Can.writeFrame(_0x1D0_Frame);  // timeout defaults to 1 ms
 }
-
 
 void setup(void) {
   pinMode(SOLENOID_A, INPUT);   
@@ -231,7 +230,7 @@ void loop() {
       Serial.print(" 0x130 \n\r");
   }
 
-  if(currentStamp - lastStamp_1A0_160ms > 199) {   // sends frame every 200 ms
+  if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 200 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
       lastStamp_1A0_160ms = currentStamp;
