@@ -224,11 +224,8 @@ void loop() {
 
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
-      // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
-      // ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
-      ChkSum_130 = ((MsgCtr_130 + 0x00 ) % 0x10);
-      ChkSum_130 = (ChkSum_130 * 0x10) + MsgCtr_130;
-            lastStamp_130_100ms = currentStamp;
+      ChkSum_130 = MsgCtr_130; // ChkSum algorithm unknown
+      lastStamp_130_100ms = currentStamp;
       send_0x130_Frame(MsgCtr_130); // 0x1A0
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
