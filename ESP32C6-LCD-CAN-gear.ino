@@ -37,7 +37,7 @@
 #define ChkSumOffset_C4   108
 #define ChkSumOffset_C8   108
 #define ChkSumOffset_130   11 
-#define ChkSumOffset_130_B 199
+#define ChkSumOffset_130_B 79
 #define ChkSumOffset_1A0  162
 #define ChkSumOffset_1D0   94
 
@@ -114,7 +114,7 @@ void send_0x130_Frame(uint8_t TerminalStatus) { // 100 ms // TerminalStatus
 	_0x130_Frame.data[0] = 0x45;
 	_0x130_Frame.data[1] = 0x43;
 	_0x130_Frame.data[2] = 0x29;
-	_0x130_Frame.data[3] = 0x0F;    
+	_0x130_Frame.data[3] = 0x8F;    
 	_0x130_Frame.data[4] = ChkSum_130; // H nibble is checksum and L nibble is counter
   ESP32Can.writeFrame(_0x130_Frame);  // timeout defaults to 1 ms
 }
@@ -220,7 +220,8 @@ void loop() {
       Serial.print(" 0xC8 \n\r");
   }
 */
-/*  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
+
+  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
       ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
@@ -230,7 +231,7 @@ void loop() {
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
   }
-*/
+
   if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 160 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
