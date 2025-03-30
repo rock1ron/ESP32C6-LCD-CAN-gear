@@ -191,7 +191,7 @@ void loop() {
   int gear, lockup = 0;
   static uint32_t lastStamp_AA_20ms, lastStamp_C4_10ms, lastStamp_C8_200ms, lastStamp_130_100ms, lastStamp_1A0_160ms, lastStamp_1D0_200ms  = 0;
   uint32_t currentStamp = millis();
-
+/*
   if(currentStamp - lastStamp_AA_20ms > 19) {   // sends frame every 20 ms
       if (MsgCtr_AA < 14) MsgCtr_AA++; else MsgCtr_AA = 0;
       ChkSum_AA = (MsgCtr_AA + ChkSumOffset_AA) % 0x100; // Test with precalculated values
@@ -200,6 +200,7 @@ void loop() {
       Serial.print(lastStamp_AA_20ms);
       Serial.print(" 0xAA \n\r");
   }    
+*/
 /*
   if(currentStamp - lastStamp_C4_10ms > 9) {   // sends frame every 10 ms
       if (MsgCtr_C4 < 14) MsgCtr_C4++; else MsgCtr_C4 = 0;
@@ -220,7 +221,7 @@ void loop() {
       Serial.print(" 0xC8 \n\r");
   }
 */
-
+/*
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
@@ -231,7 +232,7 @@ void loop() {
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
   }
-
+*/
   if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 160 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
@@ -240,6 +241,7 @@ void loop() {
       Serial.print(lastStamp_1A0_160ms);
       Serial.print(" 0x1A0 \n\r");
   }
+
 /*
   if(currentStamp - lastStamp_1D0_200ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_1D0 < 14) MsgCtr_1D0++; else MsgCtr_1D0 = 0;
