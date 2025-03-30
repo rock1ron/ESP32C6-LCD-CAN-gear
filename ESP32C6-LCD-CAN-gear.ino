@@ -92,20 +92,6 @@ void send_0xC4_Frame(uint8_t SteerAng) { // 10 ms // SteeringWheelAngle
   ESP32Can.writeFrame(_0xC4_Frame);  // timeout defaults to 1 ms
 }
 
-void send_0xC8_Frame(uint8_t SteerAng) { // 200 ms // SteeringWheelAngle_slow
-	CanFrame _0xC8_Frame = { 0 };
-	_0xC8_Frame.identifier = 0xC8; // 200
-	_0xC8_Frame.extd = 0;
-	_0xC8_Frame.data_length_code = 6;
-	_0xC8_Frame.data[0] = 0xBA;
-	_0xC8_Frame.data[1] = 0x02;
-	_0xC8_Frame.data[2] = MsgCtr_C8;
-	_0xC8_Frame.data[3] = 0x00;    
-	_0xC8_Frame.data[4] = 0x00;   
-	_0xC8_Frame.data[5] = ChkSum_C8;   
-  ESP32Can.writeFrame(_0xC8_Frame);  // timeout defaults to 1 ms
-}
-
 void send_0x130_Frame(uint8_t TerminalStatus) { // 100 ms // TerminalStatus
 	CanFrame _0x130_Frame = { 0 };
 	_0x130_Frame.identifier = 0x130; // 304
@@ -210,16 +196,6 @@ void loop() {
       Serial.print(lastStamp_C4_10ms);
       Serial.print(" 0xC4 \n\r");
   }    
-*/
-/*
-  if(currentStamp - lastStamp_C8_200ms > 199) {   // sends frame every 200 ms
-      if (MsgCtr_C8 < 14) MsgCtr_C8++; else MsgCtr_C8 = 0;
-      ChkSum_C8 = ((MsgCtr_C8 * 0x10) + ChkSumOffset_C8) % 0x100; // Test with precalculated values
-      lastStamp_C8_200ms = currentStamp;
-      send_0xC8_Frame(MsgCtr_C8);
-      Serial.print(lastStamp_C8_200ms);
-      Serial.print(" 0xC8 \n\r");
-  }
 */
 
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
