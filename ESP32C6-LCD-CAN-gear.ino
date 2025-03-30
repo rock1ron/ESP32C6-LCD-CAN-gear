@@ -130,7 +130,7 @@ void send_0x1A0_Frame(uint8_t Speed) { // 160 ms // Speed
 	_0x1A0_Frame.data[3] = 0x00;    
 	_0x1A0_Frame.data[4] = 0x00;   
 	_0x1A0_Frame.data[5] = 0x00;   
-	_0x1A0_Frame.data[6] = (MsgCtr_1A0 * 0x10) + 0x08; // H nibble is counter
+	_0x1A0_Frame.data[6] = (MsgCtr_1A0 * 0x10) + 0x08; // H-nibble is counter
 	_0x1A0_Frame.data[7] = ChkSum_1A0;
   ESP32Can.writeFrame(_0x1A0_Frame);  // timeout defaults to 1 ms
 }
@@ -221,18 +221,19 @@ void loop() {
       Serial.print(" 0xC8 \n\r");
   }
 */
-/*
+
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
-      ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
+      // ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
+      ChkSum_130 = ((MsgCtr_130 + 0x00 ) % 0x10);
       ChkSum_130 = (ChkSum_130 * 0x10) + MsgCtr_130;
-      lastStamp_130_100ms = currentStamp;
+            lastStamp_130_100ms = currentStamp;
       send_0x130_Frame(MsgCtr_130); // 0x1A0
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
   }
-*/
+
   if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 160 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
