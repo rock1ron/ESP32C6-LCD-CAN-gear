@@ -37,8 +37,8 @@
 #define ChkSumOffset_C4   108
 #define ChkSumOffset_C8   108
 #define ChkSumOffset_130   11 
-#define ChkSumOffset_130_B 203
-#define ChkSumOffset_1A0  170
+#define ChkSumOffset_130_B 199
+#define ChkSumOffset_1A0  162
 #define ChkSumOffset_1D0   94
 
 // OPTION 1 (recommended) is to use the HARDWARE SPI pins, which are unique
@@ -112,7 +112,7 @@ void send_0x130_Frame(uint8_t TerminalStatus) { // 100 ms // TerminalStatus
 	_0x130_Frame.extd = 0;
 	_0x130_Frame.data_length_code = 5;
 	_0x130_Frame.data[0] = 0x45;
-	_0x130_Frame.data[1] = 0x03;
+	_0x130_Frame.data[1] = 0x43;
 	_0x130_Frame.data[2] = 0x29;
 	_0x130_Frame.data[3] = 0x0F;    
 	_0x130_Frame.data[4] = ChkSum_130; // H nibble is checksum and L nibble is counter
@@ -124,13 +124,13 @@ void send_0x1A0_Frame(uint8_t Speed) { // 160 ms // Speed
 	_0x1A0_Frame.identifier = 0x1A0; // 416
 	_0x1A0_Frame.extd = 0;
 	_0x1A0_Frame.data_length_code = 8;
-	_0x1A0_Frame.data[0] = 0x00;
-	_0x1A0_Frame.data[1] = 0x80;
+	_0x1A0_Frame.data[0] = 0xF0;
+	_0x1A0_Frame.data[1] = 0x10;
 	_0x1A0_Frame.data[2] = 0x00;
 	_0x1A0_Frame.data[3] = 0x00;    
 	_0x1A0_Frame.data[4] = 0x00;   
 	_0x1A0_Frame.data[5] = 0x00;   
-	_0x1A0_Frame.data[6] = MsgCtr_1A0 * 0x10; // H nibble is counter
+	_0x1A0_Frame.data[6] = (MsgCtr_1A0 * 0x10) + 0x08; // H nibble is counter
 	_0x1A0_Frame.data[7] = ChkSum_1A0;
   ESP32Can.writeFrame(_0x1A0_Frame);  // timeout defaults to 1 ms
 }
@@ -200,8 +200,8 @@ void loop() {
       Serial.print(lastStamp_AA_20ms);
       Serial.print(" 0xAA \n\r");
   }    
-
-  if(currentStamp - lastStamp_C4_10ms > 9) {   // sends frame every 100 ms
+/*
+  if(currentStamp - lastStamp_C4_10ms > 9) {   // sends frame every 10 ms
       if (MsgCtr_C4 < 14) MsgCtr_C4++; else MsgCtr_C4 = 0;
       // ChkSum_C4 = (MsgCtr_C4 + ChkSumOffset_C4) % 0x100;
       lastStamp_C4_10ms = currentStamp;
@@ -209,8 +209,9 @@ void loop() {
       Serial.print(lastStamp_C4_10ms);
       Serial.print(" 0xC4 \n\r");
   }    
+*/
 /*
-  if(currentStamp - lastStamp_C8_200ms > 199) {   // sends frame every 100 ms
+  if(currentStamp - lastStamp_C8_200ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_C8 < 14) MsgCtr_C8++; else MsgCtr_C8 = 0;
       ChkSum_C8 = ((MsgCtr_C8 * 0x10) + ChkSumOffset_C8) % 0x100; // Test with precalculated values
       lastStamp_C8_200ms = currentStamp;
@@ -219,7 +220,7 @@ void loop() {
       Serial.print(" 0xC8 \n\r");
   }
 */
-  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 160 ms
+  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
       ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
@@ -230,7 +231,7 @@ void loop() {
       Serial.print(" 0x130 \n\r");
   }
 
-  if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 200 ms
+  if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 160 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
       lastStamp_1A0_160ms = currentStamp;
@@ -238,7 +239,7 @@ void loop() {
       Serial.print(lastStamp_1A0_160ms);
       Serial.print(" 0x1A0 \n\r");
   }
-
+/*
   if(currentStamp - lastStamp_1D0_200ms > 199) {   // sends frame every 200 ms
       if (MsgCtr_1D0 < 14) MsgCtr_1D0++; else MsgCtr_1D0 = 0;
       // ChkSum_1D0 = (MsgCtr_1D0 + ChkSumOffset_1D0) % 0x100;  // Test with precalculated values
@@ -247,7 +248,7 @@ void loop() {
       Serial.print(lastStamp_1D0_200ms);
       Serial.print(" 0x1D0 \n\r");
   }
-
+*/
 /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
        //Serial.printf("Received frame: %03X \r\n", rxFrame.identifier);
