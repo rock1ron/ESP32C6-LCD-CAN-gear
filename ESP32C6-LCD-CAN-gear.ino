@@ -220,7 +220,7 @@ void loop() {
       Serial.print(" 0xC8 \n\r");
   }
 */
-  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
+/*  if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
       // ChkSum_130 = (((MsgCtr_130 + ChkSumOffset_130) % 0x10) * 0x10) + MsgCtr_C4;
       ChkSum_130 = ((MsgCtr_130 + ChkSumOffset_130_B) % 0x10);
@@ -230,7 +230,7 @@ void loop() {
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
   }
-
+*/
   if(currentStamp - lastStamp_1A0_160ms > 159) {   // sends frame every 160 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0) % 0x100;  // Test with precalculated values
