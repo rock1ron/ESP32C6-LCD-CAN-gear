@@ -182,7 +182,7 @@ void loop() {
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
   }
-if (BOOT_PIN){
+if (digitalRead(BOOT_PIN)){
   if(currentStamp - lastStamp_1A0_20ms > 19) {   // sends frame every 20 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
       ChkSum_1A0 = ((MsgCtr_1A0 * 0x10) + ChkSumOffset_1A0_6kmh) % 0x100;  // Test with precalculated values
