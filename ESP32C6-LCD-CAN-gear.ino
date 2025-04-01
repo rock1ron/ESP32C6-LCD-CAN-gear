@@ -207,7 +207,7 @@ void loop() {
       }
   }
 */
-
+/*
   gear = (digitalRead(SOLENOID_A) + (digitalRead(SOLENOID_B) * 2));
   lockup = (digitalRead(TCC));
   if (gear != lastgear) {
@@ -223,7 +223,7 @@ if (lockup != lastlockup) {
     if (lockup) tft.print("L");
     else tft.print("U");
     }
-
+*/
 }
 
 
