@@ -162,7 +162,8 @@ void setup(void) {
 void loop() {
   static int lastgear, lastlockup = 0;
   int gear, lockup = 0;
-  int tmp, DataSum_1A0;
+  int DataSum_1A0;
+  int speed_pot;
   static uint32_t lastStamp_C4_10ms, lastStamp_130_100ms, lastStamp_1A0_20ms  = 0;
   uint32_t currentStamp = millis();
 /*
@@ -175,6 +176,8 @@ void loop() {
       Serial.print(" 0xC4 \n\r");
   }    
 */
+  speed_pot = analogRead(AN_IN);
+  if (speed_pot > 0xC00) speed_pot = 0xC00; // Limit to 316 m/h
 
   if(currentStamp - lastStamp_130_100ms > 99) {   // sends frame every 100 ms
       if (MsgCtr_130 < 14) MsgCtr_130++; else MsgCtr_130 = 0;
@@ -183,21 +186,20 @@ void loop() {
       send_0x130_Frame(MsgCtr_130); 
       Serial.print(lastStamp_130_100ms);
       Serial.print(" 0x130 \n\r");
-      Serial.print(analogRead(AN_IN));
   }
 
   if(currentStamp - lastStamp_1A0_20ms > 19) {   // sends frame every 20 ms
       if (MsgCtr_1A0 < 14) MsgCtr_1A0++; else MsgCtr_1A0 = 0;
-      if (tmp = analogRead(AN_IN) > 0xC00) tmp = 0xC00; // Limit to 316 m/h
-      VspeedL = tmp % 0x100;
-      VspeedH = tmp / 0x100;
+      VspeedL = speed_pot % 0x100;
+      VspeedH = speed_pot / 0x100;
       DataSum_1A0 = VspeedL + VspeedH + _0x1A0_data[1] + _0x1A0_data[2] + _0x1A0_data[3] + _0x1A0_data[4] + _0x1A0_data[5];
       ChkSum_1A0 = (DataSum_1A0 + ((MsgCtr_1A0 * 0x10) + _0x1A0_data[6] + ChkSumOffset_1A0)) % 0x100;  // Test with precalculated values
       lastStamp_1A0_20ms = currentStamp;
       send_0x1A0_Frame(MsgCtr_1A0);
       Serial.print(lastStamp_1A0_20ms);
       Serial.print(" 0x1A0 \n\r");
-  }
+      Serial.println(speed_pot);
+}
 
 /*
   if(ESP32Can.readFrame(rxFrame, 100)) { // You can set custom timeout, default is 1000
