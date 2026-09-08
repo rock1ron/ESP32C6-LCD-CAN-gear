@@ -2,7 +2,7 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <SPI.h>
-#include <ESP32-TWAI-CAN.hpp>
+#include "ESP32-TWAI-CAN.hpp"
 
 #define CAN_TX		1 //5
 #define CAN_RX		0 //4
@@ -119,7 +119,8 @@ void setup(void) {
   pinMode(TFT_DC, OUTPUT);
   pinMode(TFT_RST, OUTPUT);
   pinMode(TFT_BL, OUTPUT);
-
+  pinMode(CAN_TX, OUTPUT);
+  pinMode(CAN_RX, INPUT_PULLUP);
   Serial.begin(115200);
 
   SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI);
